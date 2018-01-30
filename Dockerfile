@@ -10,4 +10,5 @@ RUN pip install -r development_requirements.txt
 
 COPY . /app
 
-ENTRYPOINT ["./entrypoint.sh"]
+RUN chmod +x /app/entrypoint.sh
+ENTRYPOINT ["/app/entrypoint.sh"]
