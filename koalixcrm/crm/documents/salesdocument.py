@@ -167,7 +167,7 @@ class PostalAddressForSalesDocument(PostalAddress):
         verbose_name_plural = _('Postal Address For Sales Documents')
 
     def __str__(self):
-        return xstr(self.prename) + ' ' + xstr(self.name) + ' ' + xstr(self.addressline1)
+        return xstr(self.pre_name) + ' ' + xstr(self.name) + ' ' + xstr(self.address_line_1)
 
 
 class EmailAddressForSalesDocument(EmailAddress):
@@ -214,9 +214,18 @@ class SalesDocumentPostalAddress(admin.StackedInline):
     classes = ['collapse']
     fieldsets = (
         ('Basics', {
-            'fields': (
-            'prefix', 'prename', 'name', 'addressline1', 'addressline2', 'addressline3', 'addressline4', 'zipcode',
-            'town', 'state', 'country', 'purpose')
+            'fields': ('prefix',
+                       'pre_name',
+                       'name',
+                       'address_line_1',
+                       'address_line_2',
+                       'address_line_3',
+                       'address_line_4',
+                       'zip_code',
+                       'town',
+                       'state',
+                       'country',
+                       'purpose')
         }),
     )
     allow_add = True
@@ -247,19 +256,40 @@ class SalesDocumentEmailAddress(admin.TabularInline):
 
 
 class OptionSalesDocument(admin.ModelAdmin):
-    list_display = ('id', 'description', 'contract', 'customer', 'currency',
-                    'staff', 'last_modified_by', 'last_calculated_price',
-                    'last_calculated_tax', 'last_pricing_date',
-                    'last_modification', 'last_print_date')
+    list_display = ('id',
+                    'description',
+                    'contract',
+                    'customer',
+                    'currency',
+                    'staff',
+                    'last_modified_by',
+                    'last_calculated_price',
+                    'last_calculated_tax',
+                    'last_pricing_date',
+                    'last_modification',
+                    'last_print_date')
     list_display_links = ('id',)
-    list_filter = ('customer', 'contract', 'currency', 'staff', 'last_modification')
+    list_filter = ('customer',
+                   'contract',
+                   'currency',
+                   'staff',
+                   'last_modification')
     ordering = ('-id',)
-    search_fields = ('contract__id', 'customer__name', 'currency__description')
+    search_fields = ('contract__id',
+                     'customer__name',
+                     'currency__description')
 
     fieldsets = (
         (_('Sales Contract'), {
-            'fields': ('contract', 'description', 'customer', 'currency', 'discount',
-                       'staff', 'external_reference', 'template_set', 'custom_date_field')
+            'fields': ('contract',
+                       'description',
+                       'customer',
+                       'currency',
+                       'discount',
+                       'staff',
+                       'external_reference',
+                       'template_set',
+                       'custom_date_field')
         }),
     )
     save_as = True
@@ -285,7 +315,7 @@ class OptionSalesDocument(admin.ModelAdmin):
         return obj
 
     def save_model(self, request, obj, form, change):
-        if (change == True):
+        if change:
             obj.last_modified_by = request.user
         else:
             obj.last_modified_by = request.user
@@ -364,3 +394,13 @@ class OptionSalesDocument(admin.ModelAdmin):
 
     create_pdf.short_description = _("Create PDF")
 
+    def create_project(self, request, queryset):
+        from koalixcrm.crm.views.createtask import CreateTaskView
+        for obj in queryset:
+            response = CreateTaskView.create_project(self,
+                                                     request,
+                                                     obj,
+                                                     ("/admin/crm/"+obj.__class__.__name__.lower()+"/"))
+            return response
+
+    create_project.short_description = _("Create Project")

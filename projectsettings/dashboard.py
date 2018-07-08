@@ -7,8 +7,6 @@ To activate your index dashboard add the following to your settings.py::
 """
 
 from django.utils.translation import ugettext_lazy as _
-from django.core.urlresolvers import reverse
-
 from grappelli.dashboard import modules, Dashboard
 from grappelli.dashboard.utils import get_admin_site_name
 
@@ -22,22 +20,16 @@ class CustomIndexDashboard(Dashboard):
         site_name = get_admin_site_name(context)
 
         self.children.append(modules.Group(
-            _('Group: koalixcrm V1.12dev2'),
+            _('Group: koalixcrm V1.12dev3'),
             column=1,
             collapsible=True,
             children = [
-                modules.ModelList(
-                    _('Projects'),
+                   modules.ModelList(
+                    _('Sales Documents and Contracts'),
                     column=1,
                     css_classes=('collapse closed',),
                     models=('koalixcrm.crm.documents.contract.Contract',
-                            'koalixcrm.crm.documents.purchaseorder.PurchaseOrder',),
-                ),
-                modules.ModelList(
-                    _('Sales Documents'),
-                    column=1,
-                    css_classes=('collapse closed',),
-                    models=('koalixcrm.crm.documents.quote.Quote',
+                            'koalixcrm.crm.documents.quote.Quote',
                             'koalixcrm.crm.documents.purchaseconfirmation.PurchaseConfirmation',
                             'koalixcrm.crm.documents.deliverynote.DeliveryNote',
                             'koalixcrm.crm.documents.invoice.Invoice',
@@ -71,17 +63,18 @@ class CustomIndexDashboard(Dashboard):
                     models=('koalixcrm.accounting.*',),
                 ),
                 modules.ModelList(
-                    _('Reporting'),
+                    _('Projects'),
                     column=1,
                     css_classes=('collapse closed',),
-                    models=('koalixcrm.crm.reporting.*',),
+                    models=('koalixcrm.crm.reporting.*',
+                            'koalixcrm.crm.documents.purchaseorder.PurchaseOrder',),
                 ),
                 modules.LinkList(
                     _('Report Personaly work'),
                     column=1,
-                    children=[{'title': _('Monthly Report'),
-                               'url': '/koalixcrm/crm/reporting/monthlyreport/',
-                               'external': False,},]
+                    children=[{'title': _('Time Tracking'),
+                               'url': '/koalixcrm/crm/reporting/time_tracking/',
+                               'external': False}]
                 )
 
             ]
@@ -92,7 +85,7 @@ class CustomIndexDashboard(Dashboard):
             _('Group: Administration & Applications'),
             column=1,
             collapsible=True,
-            children = [
+            children=[
                 modules.ModelList(
                     _('Administration'),
                     column=1,

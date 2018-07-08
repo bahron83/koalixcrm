@@ -28,14 +28,14 @@ PREREQUISITE_APPS = [
     'django.contrib.contenttypes',
     'grappelli.dashboard',
     'grappelli',
+    'filebrowser',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'django_filters',
-    'filebrowser'
+    'django_filters'
 ]
 
 PROJECT_APPS = [
@@ -140,6 +140,8 @@ FILEBROWSER_EXTENSIONS = {
     'GIF': ['.gif'],
     'TTF': ['.ttf'],
 }
+
+LOGIN_URL = "/admin/login"
 
 REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',)
