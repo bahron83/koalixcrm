@@ -32,6 +32,7 @@ urlpatterns = [
     url(r'^grappelli/', include('grappelli.urls')), # grappelli URLS
     url(r'^admin/filebrowser/', customsite.urls),
     url(r'^admin/', admin.site.urls),
+    url(r'^crm/', include('koalixcrm.crm.urls', namespace='crm')),
 ]
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 

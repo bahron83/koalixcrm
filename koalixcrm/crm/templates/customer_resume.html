@@ -1,0 +1,65 @@
+{% load i18n %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Project Title</title>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/site_base.css' %}">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+
+	<!--[if lt IE 9]>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js"></script>
+		<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+	<![endif]-->
+</head>
+<body>
+<div class="container">
+    <section id="anagraphics">
+        <h2>{% trans "Anagraphics" %}</h2>  
+        <div class="table">
+            <div class="row">
+                <label>{% trans 'Company' %}</label>{{ customer.name }}
+            </div>
+            <div class="row">
+                <label>{% trans 'First Call' %}</label>{{ first_call.date_due }}
+                <label>{% trans 'Last Call' %}</label>{{ last_call.date_due }}
+            </div>
+            <div class="row">
+                <label>{% trans 'Address' %}</label>{{ main_address.addressline1 }}
+                {{ main_address.addressline2 }}
+                <label>{% trans 'Zipcode' %}</label>{{ main_address.zipcode }}
+                <label>{% trans 'Town' %}</label>{{ main_address.town }}
+                <label>{% trans 'State' %}</label>{{ main_address.state }}
+                <label>{% trans 'Country' %}</label>{{ main_address.country }}
+            </div>
+            <div class="row">
+                <label>{% trans 'Prefix' %}</label>{{ main_contact_prefix }}
+                <label>{% trans 'Name' %}</label>{{ main_contact.person.name }}
+                <label>{% trans 'Prename' %}</label>{{ main_contact.person.prename }}
+                <label>{% trans 'Email' %}</label>{{ main_contact.person.email }}
+                <label>{% trans 'Phone' %}</label>{{ main_contact.person.phone }}
+                <label>{% trans 'Role' %}</label>{{ main_contact.person.role }}
+            </div>
+            <div class="row">
+                <label>{% trans 'Notes' %}</label>{{ last_call.description }}
+            </div>
+            <div class="row"></div>
+            <div class="row"></div>
+            <div class="row"></div>
+        </div>    
+    </section>
+    <section id="phone">
+        <h2>{% trans "Phone Check" %}</h2>
+        <div class="row">
+            
+        </div>
+    </section>
+</div>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/js/bootstrap.min.js"></script>
+</body>
+</html>

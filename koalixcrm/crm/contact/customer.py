@@ -9,64 +9,44 @@ from koalixcrm.crm.contact.contact import Contact, ContactCall, ContactVisit, Pe
 from koalixcrm.crm.contact.supplier import Supplier
 from koalixcrm.crm.product.product import Product
 from koalixcrm.crm.contact.person import *
+from koalixcrm.crm.models import Exportable
 from django.http import HttpResponseRedirect
 
 import koalixcrm.crm.documents.contract
 
-class Customer(Contact):
-    defaultCustomerBillingCycle = models.ForeignKey('CustomerBillingCycle', verbose_name=_('Default Billing Cycle'))
-    ismemberof = models.ManyToManyField("CustomerGroup", verbose_name=_('Is member of'), blank=True)
-    isLead = models.BooleanField(default=True)
 
-    def createContract(self, request):
-        contract = koalixcrm.crm.documents.contract.Contract()
-        contract.default_customer = self
-        contract.default_currency = djangoUserExtension.models.UserExtension.objects.filter(user=request.user.id)[
-            0].defaultCurrency
-        contract.last_modified_by = request.user
-        contract.staff = request.user
-        contract.save()
-        return contract
+class ProductForCustomer(Exportable, models.Model):
+    EXPORT_FIELDS = (
+        ('customer', 'name'),
+        ('product', 'p_product'),
+        ('supplier', 'p_supplier'),
+        ('service_type', 'service_type'),
+        ('quantity', 'quantity'),
+        ('maintainer', 'maintainer'),
+        ('year', 'year'),
+        ('expire_date', 'expire_date'),
+    )
 
-    def createInvoice(self, request):
-        contract = self.createContract(request)
-        invoice = contract.createInvoice()
-        return invoice
-
-    def createQuote(self):
-        contract = self.createContract()
-        quote = contract.createQuote()
-        return quote
-
-    def isInGroup(self, customerGroup):
-        for customerGroupMembership in self.ismemberof.all():
-            if (customerGroupMembership.id == customerGroup.id):
-                return 1
-        return 0
-
-    '''def hasPerson(self, person):
-        for customerContact in self.people.all():
-            if (customerContact.id == person.id):
-                return 1
-        return 0'''
-
-    class Meta:
-        app_label = "crm"
-        verbose_name = _('Customer')
-        verbose_name_plural = _('Customers')
-
-    def __str__(self):
-        return '{} ({})'.format(str(self.name), self.id)
-
-class ProductForCustomer(models.Model):
-    customer = models.ForeignKey(Customer, related_name='supplier_association', blank=True, null=True)
+    customer = models.ForeignKey("Customer", related_name='products', blank=True, null=True)
     product = models.ForeignKey(Product, verbose_name=_("Related Product"), blank=True, null=True)
-    supplier = models.ForeignKey(Supplier, related_name='customer_association', blank=True, null=True)
+    supplier = models.ForeignKey(Supplier, related_name='products', blank=True, null=True)
     service_type = models.CharField(verbose_name=_("Service Type"), max_length=100, blank=True, null=True)
     quantity = models.IntegerField(verbose_name=_("Quantity"), blank=True, null=True)
     maintainer = models.CharField(verbose_name=_("Maintainer"), max_length=100, blank=True, null=True)
     year = models.CharField(verbose_name=_("Year of installation"), max_length=50, blank=True, null=True)
     expire_date = models.DateTimeField(verbose_name=_("Expire Date"), blank=True, null=True)
+    
+    @property
+    def p_customer(self):
+        return self.customer.name
+
+    @property
+    def p_product(self):
+        return self.product.title
+
+    @property
+    def p_supplier(self):
+        return self.supplier.name
     
     class Meta:
         app_label = "crm"
@@ -77,6 +57,19 @@ class ProductForCustomer(models.Model):
         return str(self.id)
 
 class SwitchboardForCustomer(ProductForCustomer):
+    EXPORT_FIELDS = (
+        ('customer', 'name'),
+        ('product', 'p_product'),
+        ('supplier', 'p_supplier'),
+        ('service_type', 'service_type'),
+        ('quantity', 'quantity'),
+        ('maintainer', 'maintainer'),
+        ('year', 'year'),
+        ('expire_date', 'expire_date'),
+        ('internal_lines', 'internal_lines'),
+        ('external_lines', 'external_lines'),  
+    )
+
     internal_lines = models.IntegerField(verbose_name=_("Internal lines"), blank=True, null=True)
     external_lines = models.IntegerField(verbose_name=_("External lines"), blank=True, null=True)
     
@@ -137,7 +130,7 @@ class CustomerPhoneSystem(admin.StackedInline):
         (None, {'fields': ['product']}),
         ('Additional data', {
             'fields': (
-            'service_type', 'supplier', 'expire_date', 'year', 'external_lines', 'internal_lines',)
+            'service_type', 'supplier', 'maintainer', 'expire_date', 'year', 'external_lines', 'internal_lines',)
         }),
     )
 
@@ -239,6 +232,98 @@ class CustomerInternetConnection(admin.StackedInline):
                 ids = [(c.customer.id) for c in cust_per_supplier]
                 return queryset.filter(pk__in=ids)
         return queryset'''
+
+class Customer(Exportable, Contact):
+    EXPORT_FIELDS = (
+        ('name', 'name'),
+        ('vatnumber', 'vatnumber'),
+    )
+
+    EXPORT_FIELDS_EXTENDED = (
+        ('name', 'name'),
+        ('vatnumber', 'vatnumber'),
+        ('ismemberof', 'p_ismemberof'),
+        ('postal_addresses', 'p_postal_addresses'),
+        ('email_addresses', 'p_email_addresses'),
+        ('phone_addresses', 'p_phone_addresses'),
+        ('phone_system', 'p_phone_system'),
+        ('calls', 'p_calls'),
+        ('visits', 'p_visits'),
+    )
+
+    defaultCustomerBillingCycle = models.ForeignKey('CustomerBillingCycle', verbose_name=_('Default Billing Cycle'))
+    ismemberof = models.ManyToManyField("CustomerGroup", verbose_name=_('Is member of'), blank=True)
+    isLead = models.BooleanField(default=True)
+    
+    @property
+    def p_postal_addresses(self):
+        return [pa.export(tuple([(k,k) for k in list(pa.__dict__.keys()) if not k.startswith('_')])) for pa in self.postal_addresses.all()]
+
+    @property
+    def p_email_addresses(self):
+        return [pa.export(tuple([(k,k) for k in list(pa.__dict__.keys()) if not k.startswith('_')])) for pa in self.email_addresses.all()]
+
+    @property
+    def p_phone_addresses(self):
+        return [pa.export(tuple([(k,k) for k in list(pa.__dict__.keys()) if not k.startswith('_')])) for pa in self.phone_addresses.all()]
+
+    @property
+    def p_calls(self):
+        return [pa.export() for pa in self.calls.all()]
+
+    @property
+    def p_visits(self):
+        return [pa.export() for pa in self.visits.all()]
+
+    @property
+    def p_phone_system(self):
+        switchboards = SwitchboardForCustomer.objects.filter(customer=self)
+        if switchboards.exists():
+            return [pa.export() for pa in switchboards]
+
+    @property
+    def p_ismemberof(self):
+        return [g.name for g in self.ismemberof.all()]
+
+    def createContract(self, request):
+        contract = koalixcrm.crm.documents.contract.Contract()
+        contract.default_customer = self
+        contract.default_currency = djangoUserExtension.models.UserExtension.objects.filter(user=request.user.id)[
+            0].defaultCurrency
+        contract.last_modified_by = request.user
+        contract.staff = request.user
+        contract.save()
+        return contract
+
+    def createInvoice(self, request):
+        contract = self.createContract(request)
+        invoice = contract.createInvoice()
+        return invoice
+
+    def createQuote(self):
+        contract = self.createContract()
+        quote = contract.createQuote()
+        return quote
+
+    def isInGroup(self, customerGroup):
+        for customerGroupMembership in self.ismemberof.all():
+            if (customerGroupMembership.id == customerGroup.id):
+                return 1
+        return 0
+
+    '''def hasPerson(self, person):
+        for customerContact in self.people.all():
+            if (customerContact.id == person.id):
+                return 1
+        return 0'''
+
+    class Meta:
+        app_label = "crm"
+        verbose_name = _('Customer')
+        verbose_name_plural = _('Customers')
+
+    def __str__(self):
+        return '{} ({})'.format(str(self.name), self.id)
 
 class IsLeadFilter(admin.SimpleListFilter):
     title = _('Is lead')

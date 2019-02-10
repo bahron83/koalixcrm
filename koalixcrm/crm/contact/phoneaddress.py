@@ -2,9 +2,10 @@
 
 from django.db import models
 from django.utils.translation import ugettext as _
+from koalixcrm.crm.models import Exportable
 
 
-class PhoneAddress(models.Model):
+class PhoneAddress(Exportable, models.Model):
     phone = models.CharField(max_length=20, verbose_name=_("Phone Number"))
 
     class Meta:

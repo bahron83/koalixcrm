@@ -3,14 +3,53 @@ from os import path
 from wsgiref.util import FileWrapper
 from django.contrib import messages
 from subprocess import CalledProcessError
-
+from django.views.generic import View
 from django.http import Http404
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect
 from django.utils.translation import ugettext as _
 from koalixcrm.crm.exceptions import *
+#from koalixcrm.crm.contact.customer import Customer
+#from koalixcrm.crm.contact.customer import *
 import koalixcrm
+from koalixcrm.crm import models
+from django.template.response import TemplateResponse
+from koalixcrm.crm.const.postaladdressprefix import *
+#from django.views.decorators.cache import cache_page
 
+
+'''class CustomerView(View):
+    def get(self, request, *args, **kwargs):
+        customer =  models.Customer.objects.all().first()
+        out = customer.export(models.Customer.EXPORT_FIELDS_EXTENDED)
+        
+        return json_response(out)'''
+
+def customer_resume(request, id, template='customer_resume.html'):
+    try:
+        customer = models.Customer.objects.get(pk=id)
+    except Customer.DoesNotExist:
+        raise Http404 
+
+    main_address = customer.postal_addresses.filter(prefix='F').first()
+    main_contact = customer.person_association.first()
+    main_contact_prefix = None
+    if main_contact:
+        l = [p for p in POSTALADDRESSPREFIX if p[0] == main_contact.person.prefix]
+        if l:
+            main_contact_prefix = _(l[0][1])
+    first_call = customer.calls.all().order_by('date_of_creation').first()
+    last_call = customer.calls.all().order_by('-date_of_creation').first()
+    context_dict = {
+        'customer': customer,
+        'main_address': main_address,
+        'main_contact': main_contact,
+        'main_contact_prefix': main_contact_prefix,
+        'first_call': first_call,
+        'last_call': last_call
+    }
+    return TemplateResponse(
+        request, template, context=context_dict)
 
 def export_pdf(calling_model_admin, request, document, redirect_to):
     """This method exports PDFs provided by different Models in the crm application
@@ -103,3 +142,8 @@ def create_new_document(calling_model_admin, request, calling_model, requested_d
         else:
             raise Http404
     return response
+
+CACHE_TTL = 120
+
+#customer_view = cache_page(CACHE_TTL)(CustomerView.as_view())
+#customer_view = CustomerView.as_view()

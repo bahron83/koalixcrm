@@ -5,8 +5,19 @@ from django.contrib import admin
 from django.utils.translation import ugettext as _
 from koalixcrm.crm.const.postaladdressprefix import *
 from koalixcrm.plugin import *
+from koalixcrm.crm.models import Exportable
 
-class Person(models.Model):
+class Person(Exportable, models.Model):
+    EXPORT_FIELDS = (
+        ('prefix', 'prefix'),
+        ('name', 'name'),
+        ('prename', 'prename'),
+        ('email', 'email'),
+        ('phone', 'phone'),
+        ('role', 'role'),
+        ('companies', 'p_companies'),
+    )
+
     prefix = models.CharField(max_length=1, choices=POSTALADDRESSPREFIX, verbose_name=_("Prefix"), blank=True,
                               null=True)
     name = models.CharField(max_length=100, verbose_name=_("Name"), blank=True, null=True)
@@ -15,6 +26,10 @@ class Person(models.Model):
     phone = models.CharField(max_length=20, verbose_name=_("Phone Number"))
     role = models.CharField(max_length=100, verbose_name=_("Role"), blank=True, null=True)
     companies = models.ManyToManyField("Contact", through='ContactPersonAssociation', verbose_name=_('Works at'), blank=True)
+
+    @property
+    def p_companies(self):
+        return [c.name for c in self.companies.all()]
 
     def __str__(self):
         return self.prename + ' ' + self.name + ' - ' + self.email

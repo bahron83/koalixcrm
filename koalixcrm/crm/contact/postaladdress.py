@@ -4,9 +4,10 @@ from django.db import models
 from django.utils.translation import ugettext as _
 from koalixcrm.crm.const.country import *
 from koalixcrm.crm.const.postaladdressprefix import *
+from koalixcrm.crm.models import Exportable
 
 
-class PostalAddress(models.Model):
+class PostalAddress(Exportable, models.Model):
     prefix = models.CharField(max_length=1, choices=POSTALADDRESSPREFIX, verbose_name=_("Prefix"), blank=True,
                               null=True)
     name = models.CharField(max_length=100, verbose_name=_("Name"), blank=True, null=True)

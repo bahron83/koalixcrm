@@ -5,12 +5,23 @@ from django.db import models
 from django.contrib import admin
 from django.utils.translation import ugettext as _
 from koalixcrm.crm.const.status import *
+from koalixcrm.crm.models import Exportable
 
 from koalixcrm.plugin import *
 
 from django.utils import timezone
 
-class Call(models.Model):
+class Call(Exportable, models.Model):
+    EXPORT_FIELDS = (
+        ('staff', 'p_staff'),
+        ('description', 'description'),
+        ('date_of_creation', 'date_of_creation'),
+        ('date_due', 'date_due'),
+        ('last_modification', 'last_modification'),
+        ('last_modified_by', 'p_last_modified_by'),
+        ('status', 'p_status'),
+    )
+
     staff = models.ForeignKey('auth.User', limit_choices_to={'is_staff': True}, blank=True, verbose_name=_("Staff"),
                               related_name="db_relcallstaff", null=True)
     description = models.TextField(verbose_name=_("Description"))
@@ -20,6 +31,20 @@ class Call(models.Model):
     last_modified_by = models.ForeignKey('auth.User', limit_choices_to={'is_staff': True}, blank=True, null=True,
                                          verbose_name=_("Last modified by"), related_name="db_calllstmodified")
     status = models.CharField(verbose_name=_("Status"), max_length=1, choices=CALLSTATUS, default="P")
+    
+    @property
+    def p_staff(self):
+        return self.staff.username
+
+    @property
+    def p_last_modified_by(self):
+        return self.last_modified_by.username
+
+    @property
+    def p_status(self):
+        l = [s for s in CALLSTATUS if s[0] == self.status]
+        if l:
+            return _(l[0][1])
     
     def __str__(self):
         return _("Call") + " " + str(self.id)

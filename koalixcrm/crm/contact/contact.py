@@ -39,7 +39,7 @@ class Contact(models.Model):
 
 class PhoneAddressForContact(PhoneAddress):
     purpose = models.CharField(verbose_name=_("Purpose"), max_length=1, choices=PURPOSESADDRESSINCUSTOMER)
-    company = models.ForeignKey(Contact)
+    company = models.ForeignKey(Contact, related_name='phone_addresses')
 
     class Meta:
         app_label = "crm"
@@ -52,7 +52,7 @@ class PhoneAddressForContact(PhoneAddress):
 
 class EmailAddressForContact(EmailAddress):
     purpose = models.CharField(verbose_name=_("Purpose"), max_length=1, choices=PURPOSESADDRESSINCUSTOMER)
-    company = models.ForeignKey(Contact)
+    company = models.ForeignKey(Contact, related_name='email_addresses')
 
     class Meta:
         app_label = "crm"
@@ -65,7 +65,7 @@ class EmailAddressForContact(EmailAddress):
 
 class PostalAddressForContact(PostalAddress):
     purpose = models.CharField(verbose_name=_("Purpose"), max_length=1, choices=PURPOSESADDRESSINCUSTOMER)
-    company = models.ForeignKey(Contact)
+    company = models.ForeignKey(Contact, related_name='postal_addresses')
 
     class Meta:
         app_label = "crm"
@@ -113,9 +113,32 @@ class ContactEmailAddress(admin.TabularInline):
     allow_add = True
 
 class CallForContact(Call):
+    EXPORT_FIELDS = (
+        ('staff', 'p_staff'),
+        ('cperson', 'p_cperson'),
+        ('description', 'description'),
+        ('date_of_creation', 'date_of_creation'),
+        ('date_due', 'date_due'),
+        ('last_modification', 'last_modification'),
+        ('last_modified_by', 'p_last_modified_by'),
+        ('status', 'p_status'),
+        ('purpose', 'p_purpose'),
+        ('person', 'p_person'),
+    )
+
     purpose = models.CharField(verbose_name=_("Purpose"), max_length=1, choices=PURPOSECALLINCUSTOMER)
-    company = models.ForeignKey(Contact)
-    cperson = models.ForeignKey(Person, verbose_name=_("Person"), blank=True, null=True)
+    company = models.ForeignKey(Contact, related_name='calls')
+    cperson = models.ForeignKey(Person, related_name='calls', verbose_name=_("Person"), blank=True, null=True)
+
+    @property
+    def p_cperson(self):
+        return self.cperson.export() 
+    
+    @property
+    def p_purpose(self):
+        l = [p for p in PURPOSECALLINCUSTOMER if p[0] == self.purpose]
+        if l:
+            return _(l[0][1])
     
     class Meta:
         app_label = "crm"
@@ -127,9 +150,9 @@ class CallForContact(Call):
 
 class VisitForContact(Call):
     purpose = models.CharField(verbose_name=_("Purpose"), max_length=1, choices=PURPOSECALLINCUSTOMER)
-    company = models.ForeignKey(Contact)
-    cperson = models.ForeignKey(Person, verbose_name=_("Person"), blank=True, null=True)
-    ref_call = models.ForeignKey(CallForContact, verbose_name=_("Reference Call"), blank=True, null=True)
+    company = models.ForeignKey(Contact, related_name='visits')
+    cperson = models.ForeignKey(Person, related_name='visits', verbose_name=_("Person"), blank=True, null=True)
+    ref_call = models.ForeignKey(CallForContact, related_name='related_visits', verbose_name=_("Reference Call"), blank=True, null=True)
     
     class Meta:
         app_label = "crm"

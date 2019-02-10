@@ -26,4 +26,5 @@ if __name__ == "__main__":
                 "forget to activate a virtual environment?"
             )
         raise
+    #os.environ.setdefault("DJANGO_SETTINGS_MODULE", "projectsettings.settings.development_settings")
     execute_from_command_line(sys.argv)
